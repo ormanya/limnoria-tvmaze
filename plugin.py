@@ -34,20 +34,27 @@ class tvmaze(callbacks.Plugin):
     threaded=True
 
     def tv(self, irc, msg, args, opts, tvshow):
-        """[--detail | --rip] <tvshow>
+        """[--detail | --rip | --next | --last] <tvshow>
 
+           Command accepts first option only.
         """
         details = False
         rip = False
+        next = False
+        last = False
         
+        print opts
         if opts:
-             for (stuff, arg) in opts:
-                if stuff == 'd':
-                    details = True
-                elif stuff == 'detail':
+            for (stuff,arg) in opts:
+                if stuff == 'detail':
                     details = True
                 elif stuff == 'rip':
                     rip = True
+                elif stuff == 'next':
+                    next = True
+                elif stuff == 'last':
+                    last = True
+                break
 
         show = fetch(tvshow)
 
@@ -57,17 +64,21 @@ class tvmaze(callbacks.Plugin):
             else:
                 premiered = "SOON"
 
-            show_state = format('%s %s (%s).',
+            show_title = format('%s %s',
                     ircutils.bold(ircutils.underline(show['name'])),
-                    premiered[:4], show['status'])
+                    premiered[:4])
+
+            if "Ended" in show['status']:
+                show_state = ircutils.mircColor(show['status'],'red')
+            else:
+                show_state = ircutils.mircColor(show['status'],'green')
             
             if ( '_embedded' in show and 'previousepisode' in show['_embedded']):
                 airtime = parse(show['_embedded']['previousepisode']['airstamp'])
                 timedelta = datetime.datetime.now(tzlocal()) - airtime
                 relative_time = format_timedelta(timedelta,
                         granularity='minutes')
-                last_episode = format('%s: [%s] %s on %s (%s).',
-                        ircutils.underline('Previous Episode'),
+                last_episode = format('[%s] %s on %s (%s).',
                         ircutils.bold(str(show['_embedded']['previousepisode']['season'])
                             + 'x' +
                             str(show['_embedded']['previousepisode']['number'])),
@@ -82,8 +93,7 @@ class tvmaze(callbacks.Plugin):
                 timedelta = datetime.datetime.now(tzlocal()) - airtime
                 relative_time = format_timedelta(timedelta, granularity='minutes')
 
-                next_episode = format('%s: [%s] %s on %s (%s).',
-                        ircutils.underline('Next Episode'),
+                next_episode = format('[%s] %s on %s (%s).',
                         ircutils.bold(str(show['_embedded']['nextepisode']['season'])
                             + 'x' +
                             str(show['_embedded']['nextepisode']['number'])),
@@ -97,9 +107,20 @@ class tvmaze(callbacks.Plugin):
 
             
             if rip:
-                irc.reply(format('%s %s', show_state, show['url']))
+                irc.reply(format('%s is currently %s', show_title, show_state.upper()))
+            elif next:
+                if ('_embedded' in show and 'nextepisode' in show['_embedded']):
+                    irc.reply(format('%s next scheduled episode is %s', show_title, next_episode))
+                else: 
+                    irc.reply(format('%s does not have a release date for the next episode', show_title))
+            elif last:
+                if ('_embedded' in show and 'previousepisode' in show['_embedded']):
+                    irc.reply(format('%s last scheduled episode was %s', show_title, last_episode))
+                else:
+                    irc.reply(format('%s has not previously run any episodes', show_title))
             else: 
-                irc.reply(format('%s %s %s %s', show_state, last_episode, next_episode, show['url']))
+                irc.reply(format('%s (%s) %s:%s %s:%s %s', show_title, show_state, ircutils.underline('Next Episode'), last_episode, ircutils.underline('Previous Episode'), next_episode, show['url']))
+
         else:
             irc.reply(format('No show found named "%s"', ircutils.bold(tvshow)))
 
@@ -129,7 +150,7 @@ class tvmaze(callbacks.Plugin):
             irc.reply(format('%s on %s. %s', show_schedule, show_network,
                 show_genre))
         
-    tv = wrap(tv, [getopts({'d': '', 'detail': '', 'rip': ''}), 'text'])
+    tv = wrap(tv, [getopts({'d': '', 'detail': '', 'rip': '', 'next': '', 'last': ''}), 'text'])
 
     def schedule(self, irc, msg, args):
         """
