@@ -34,18 +34,20 @@ class tvmaze(callbacks.Plugin):
     threaded=True
 
     def tv(self, irc, msg, args, opts, tvshow):
-        """[-d | --detail] <tvshow>
+        """[--detail | --rip] <tvshow>
 
         """
+        details = False
+        rip = False
         
-        if not opts:
-            details = False
-        else:
-            for (stuff, arg) in opts:
+        if opts:
+             for (stuff, arg) in opts:
                 if stuff == 'd':
                     details = True
                 elif stuff == 'detail':
                     details = True
+                elif stuff == 'rip':
+                    rip = True
 
         show = fetch(tvshow)
 
@@ -94,7 +96,10 @@ class tvmaze(callbacks.Plugin):
                         ircutils.bold('not yet scheduled'))
 
             
-            irc.reply(format('%s %s %s %s', show_state, last_episode, next_episode, show['url']))
+            if rip:
+                irc.reply(format('%s %s', show_state, show['url']))
+            else: 
+                irc.reply(format('%s %s %s %s', show_state, last_episode, next_episode, show['url']))
         else:
             irc.reply(format('No show found named "%s"', ircutils.bold(tvshow)))
 
@@ -124,7 +129,7 @@ class tvmaze(callbacks.Plugin):
             irc.reply(format('%s on %s. %s', show_schedule, show_network,
                 show_genre))
         
-    tv = wrap(tv, [getopts({'d': '', 'detail': ''}), 'text'])
+    tv = wrap(tv, [getopts({'d': '', 'detail': '', 'rip': ''}), 'text'])
 
     def schedule(self, irc, msg, args):
         """
