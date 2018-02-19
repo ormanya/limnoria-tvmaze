@@ -64,9 +64,7 @@ class tvmaze(callbacks.Plugin):
             else:
                 premiered = "SOON"
 
-            show_title = format('%s %s',
-                    ircutils.bold(ircutils.underline(show['name'])),
-                    premiered[:4])
+            show_title = ircutils.bold('%s (%s)' % (show['name'], premiered[:4]))
 
             if "Ended" in show['status']:
                 show_state = ircutils.mircColor(show['status'],'red')
@@ -101,25 +99,26 @@ class tvmaze(callbacks.Plugin):
                         ircutils.bold(show['_embedded']['nextepisode']['airdate']),
                         ircutils.mircColor(relative_time, 'green'))
             else:
-                next_episode = format('%s: %s.',
-                        ircutils.underline('Next Episode'),
-                        ircutils.bold('not yet scheduled'))
+                next_episode = 'not yet scheduled'
 
             
             if rip:
-                irc.reply(format('%s is currently %s', show_title, show_state.upper()))
+                irc.reply(format('%s is %s', show_title, show_state.upper()))
             elif next:
                 if ('_embedded' in show and 'nextepisode' in show['_embedded']):
                     irc.reply(format('%s next scheduled episode is %s', show_title, next_episode))
                 else: 
-                    irc.reply(format('%s does not have a release date for the next episode', show_title))
+                    if "Ended" in show['status']:
+                        irc.reply(format('%s is %s', show_title, show_state.upper()))
+                    else:
+                        irc.reply(format('%s is %s but does not have a release date for the next episode', show_title, show_state.upper()))
             elif last:
                 if ('_embedded' in show and 'previousepisode' in show['_embedded']):
                     irc.reply(format('%s last scheduled episode was %s', show_title, last_episode))
                 else:
                     irc.reply(format('%s has not previously run any episodes', show_title))
             else: 
-                irc.reply(format('%s (%s) %s:%s %s:%s %s', show_title, show_state, ircutils.underline('Next Episode'), last_episode, ircutils.underline('Previous Episode'), next_episode, show['url']))
+                irc.reply(format('%s [%s] %s:%s %s:%s %s', show_title, show_state, ircutils.underline('Next Episode'), next_episode, ircutils.underline('Previous Episode'), last_episode, show['url']))
 
         else:
             irc.reply(format('No show found named "%s"', ircutils.bold(tvshow)))
