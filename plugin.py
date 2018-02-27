@@ -49,7 +49,7 @@ def fetch(show=False):
                         continue
 
                     try:
-                        if modifier in show2['show']['network']['country']['code']:
+                        if modifier.upper() in show2['show']['network']['country']['code'].upper():
                             id=show2['show']['id']
                     except:
                         continue
