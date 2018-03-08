@@ -156,7 +156,7 @@ class tvmaze(callbacks.Plugin):
                 if "Ended" in show['status']:
                     irc.reply(format('%s %s %s: %s %s', show_title, show_state, ircutils.underline('Previous Episode'), last_episode, show['url']))
                 else:
-                    irc.reply(format('%s %s %s:%s %s: %s %s', show_title, show_state, ircutils.underline('Next Episode'), next_episode, ircutils.underline('Previous Episode'), last_episode, show['url']))
+                    irc.reply(format('%s %s %s: %s %s: %s %s', show_title, show_state, ircutils.underline('Next Episode'), next_episode, ircutils.underline('Previous Episode'), last_episode, show['url']))
 
         else:
             irc.reply(format('No show found named "%s"', ircutils.bold(tvshow)))
